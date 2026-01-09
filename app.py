@@ -1,21 +1,34 @@
 import streamlit as st
 import datetime
 import pandas as pd
-import pickle  # Use this to load your .pkl files directly
+import joblib
+import urllib.request
+import os
+import zipfile
 
 st.set_page_config(page_title="AgriPredict", page_icon="🌱", layout="wide")
 
-# 1. LOAD MODELS DIRECTLY (instead of using an API)
-# Make sure le_crop.pkl and le_soil.pkl are in your GitHub main folder
-try:
-    with open('le_crop.pkl', 'rb') as f:
-        model_crop = pickle.load(f)
-    # If you have a main prediction model file, load it here too:
-    # with open('your_model_name.pkl', 'rb') as f:
-    #     prediction_model = pickle.load(f)
-except FileNotFoundError:
-    st.error("Model files not found. Please ensure .pkl files are uploaded to GitHub.")
+# --- MODEL DOWNLOADING AND LOADING ---
+MODEL_URL = "https://github.com/user-attachments/files/24524928/crop_yield_model.zip"
+ZIP_PATH = "crop_yield_model.zip"
+MODEL_PATH = "crop_yield_model.pkl"
 
+@st.cache_resource # This ensures it only downloads once
+def load_large_model():
+    if not os.path.exists(MODEL_PATH):
+        with st.spinner("Downloading and extracting model... please wait."):
+            urllib.request.urlretrieve(MODEL_URL, ZIP_PATH)
+            with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
+                zip_ref.extractall(".")
+    return joblib.load(MODEL_PATH)
+
+try:
+    model = load_large_model()
+    st.sidebar.success("✅ Model Ready")
+except Exception as e:
+    st.sidebar.error(f"❌ Model Error: {e}")
+
+# --- STYLING ---
 st.markdown("""
     <style>
     .main { background-color: #f5f7f9; }
@@ -50,8 +63,8 @@ with st.sidebar:
 col1, col2 = st.columns([1, 1])
 
 if st.button("🚀 Analyze & Generate Prediction"):
-    # Prepare data for prediction
-    input_data = pd.DataFrame([{
+    # Prepare the data exactly as the model expects it
+    input_df = pd.DataFrame([{
         "Crop_Type": crop_mapping[crop_name],
         "Soil_Type": soil_mapping[soil_name],
         "Soil_pH": ph,
@@ -67,18 +80,12 @@ if st.button("🚀 Analyze & Generate Prediction"):
     }])
     
     try:
-        # Instead of requests.post, we call the model directly
-        # Example: prediction = prediction_model.predict(input_data)[0]
-        
-        # NOTE: Since I don't have your full prediction logic from main.py, 
-        # I've put a placeholder below. Replace this with your actual prediction code.
-        predicted_yield = 4.5  # Replace with: prediction_model.predict(input_data)
-        
+        prediction = model.predict(input_df)[0]
         with col1:
-            st.metric(label="Predicted Yield", value=f"{predicted_yield} MT/Ha")
-            st.success("**Status:** Prediction generated successfully based on local model.")
-
+            st.metric(label="Predicted Yield", value=f"{prediction:.2f} MT/Ha")
+            if prediction < 3.0: # Example logic for recommendation
+                st.warning("**Recommendation:** Consider increasing Nitrogen (N) levels.")
+            else:
+                st.success("**Recommendation:** Conditions are optimal for this crop.")
     except Exception as e:
         st.error(f"Prediction Error: {e}")
-else:
-    st.info("👈 Adjust field conditions in the sidebar and click the button.")
