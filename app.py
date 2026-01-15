@@ -18,12 +18,10 @@ def load_active_model():
 
 model = load_active_model()
 
-# --- SIDEBAR & UI ---
+# --- SIDEBAR UI ---
 with st.sidebar:
     if model:
         st.success("✅ System Online: Model Ready")
-    else:
-        st.error("❌ Model File Not Found")
     
     st.header("📍 Field Conditions")
     crop_mapping = {"Wheat": 9, "Corn": 1, "Rice": 7, "Soybean": 8, "Cotton": 2}
@@ -42,10 +40,12 @@ with st.sidebar:
     k_val = st.number_input("Potassium (K)", 0.0, 200.0, 30.0)
     sq_val = st.slider("Soil Quality Index", 0.0, 100.0, 80.0)
 
+# --- MAIN DASHBOARD ---
 st.title("🌾 Smart Farm: Yield Prediction Dashboard")
 
 if st.button("🚀 Analyze & Generate Prediction"):
     if model:
+        # Prepare Feature Data
         features = ["Crop_Type", "Soil_Type", "Soil_pH", "Temperature", "Humidity", 
                     "Wind_Speed", "N", "P", "K", "Soil_Quality", "month", "year"]
         
@@ -57,26 +57,31 @@ if st.button("🚀 Analyze & Generate Prediction"):
         try:
             prediction = model.predict(input_df)[0]
             
-            col_left, col_right = st.columns([1, 1])
+            # Layout Columns
+            col_text, col_chart = st.columns([1, 1.2])
             
-            with col_left:
+            with col_text:
                 st.subheader("Predicted Yield")
                 st.title(f"{prediction:.2f} MT/Ha")
                 
-                # --- YOUR CUSTOM STATUS LOGIC ---
-                if prediction < 25.0:
+                # --- YOUR CUSTOM STATUS ALERT ---
+                if prediction < 25.0: # Set threshold for 'critically low'
                     st.error("Status: ALERT: Predicted yield is critically low! Check soil nutrients.")
                 else:
-                    st.success("Status: Yield is within healthy range.")
+                    st.success("Status: SUCCESS: Predicted yield is within a healthy range.")
 
-            with col_right:
+            with col_chart:
                 st.subheader("📊 Factor Impact Analysis")
                 if hasattr(model, 'feature_importances_'):
                     importances = model.feature_importances_
                     feat_imp = pd.Series(importances, index=features).sort_values(ascending=True)
-                    fig, ax = plt.subplots()
+                    
+                    fig, ax = plt.subplots(figsize=(8, 5))
                     feat_imp.tail(5).plot(kind='barh', ax=ax, color='#2e7d32')
+                    ax.set_title("Top 5 Impacting Factors")
                     st.pyplot(fig)
+                else:
+                    st.info("Factor analysis is currently unavailable.")
                     
         except Exception as e:
             st.error(f"Prediction Error: {e}")
