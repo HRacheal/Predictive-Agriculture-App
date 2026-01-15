@@ -3,18 +3,20 @@ import datetime
 import pandas as pd
 import joblib
 import os
-import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="AgriPredict", page_icon="🌱", layout="wide")
 
 # --- MODEL LOADING ---
+# This is the "Brain" you just uploaded with Git LFS
 MODEL_PATH = "crop_yield_model.pkl"
 
 @st.cache_resource 
 def load_active_model():
     if os.path.exists(MODEL_PATH):
         return joblib.load(MODEL_PATH)
-    return None
+    else:
+        st.error(f"Model file {MODEL_PATH} not found in the cloud storage.")
+        return None
 
 model = load_active_model()
 
@@ -40,48 +42,28 @@ with st.sidebar:
     k_val = st.number_input("Potassium (K)", 0.0, 200.0, 30.0)
     sq_val = st.slider("Soil Quality Index", 0.0, 100.0, 80.0)
 
-# --- PREDICTION & CHART LOGIC ---
+# --- THE PREDICTION BUTTON ---
 if st.button("🚀 Analyze & Generate Prediction"):
-    if model:
-        # 1. Prepare data
-        features = ["Crop_Type", "Soil_Type", "Soil_pH", "Temperature", "Humidity", 
-                    "Wind_Speed", "N", "P", "K", "Soil_Quality", "month", "year"]
-        
-        input_data = [
-            crop_mapping[crop_name], soil_mapping[soil_name], ph, temp, float(hum),
-            12.0, n_val, p_val, k_val, sq_val, date.month, date.year
-        ]
-        input_df = pd.DataFrame([input_data], columns=features)
+    if model is None:
+        st.error("Model not loaded correctly.")
+    else:
+        # Prepare data for the model
+        input_df = pd.DataFrame([{
+            "Crop_Type": crop_mapping[crop_name],
+            "Soil_Type": soil_mapping[soil_name],
+            "Soil_pH": ph,
+            "Temperature": temp,
+            "Humidity": float(hum),
+            "Wind_Speed": 12.0, 
+            "N": n_val, "P": p_val, "K": k_val,
+            "Soil_Quality": sq_val,
+            "month": date.month, "year": date.year
+        }])
         
         try:
-            # 2. Get Prediction
             prediction = model.predict(input_df)[0]
-            
-            # 3. Create Columns for Layout
-            col_text, col_chart = st.columns([1, 1])
-            
-            with col_text:
-                st.subheader("Predicted Yield")
-                st.title(f"{prediction:.2f} MT/Ha")
-                if prediction > 20:
-                    st.success("Status: Yield is within healthy range.")
-                else:
-                    st.warning("Status: Low yield alert.")
-
-            with col_chart:
-                st.subheader("📊 Factor Impact Analysis")
-                # Extract importance from the model
-                if hasattr(model, 'feature_importances_'):
-                    importances = model.feature_importances_
-                    feat_imp = pd.Series(importances, index=features).sort_values(ascending=False)
-                    
-                    # Plotting
-                    fig, ax = plt.subplots()
-                    feat_imp.plot(kind='bar', ax=ax, color='#1f77b4')
-                    plt.xticks(rotation=45, ha='right')
-                    st.pyplot(fig)
-                else:
-                    st.info("Feature importance not available for this model type.")
-                    
+            st.divider()
+            st.metric(label="Estimated Yield", value=f"{prediction:.2f} MT/Ha")
+            st.success("Prediction generated successfully on your mobile device!")
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Prediction Error: {e}")
