@@ -4,7 +4,7 @@ import pandas as pd
 import joblib
 import os
 
-st.set_page_config(page_title="AgriPredict", page_icon="🌱", layout="wide")
+st.set_page_config(page_title="AgriPredict",  layout="wide")
 
 # --- MODEL LOADING ---
 # This is the "Brain" you just uploaded with Git LFS
@@ -21,7 +21,7 @@ def load_active_model():
 model = load_active_model()
 
 if model:
-    st.sidebar.success("✅ System Online: Model Ready")
+    st.sidebar.success(" Model Ready")
 
 # --- UI LOGIC ---
 st.title("🌾 Smart Farm: Yield Prediction Dashboard")
@@ -30,7 +30,7 @@ crop_mapping = {"Wheat": 9, "Corn": 1, "Rice": 7, "Soybean": 8, "Cotton": 2}
 soil_mapping = {"Clay": 0, "Silt": 4, "Sandy": 3, "Loamy": 2}
 
 with st.sidebar:
-    st.header("📍 Field Conditions")
+    st.header("Field Conditions")
     date = st.date_input("Observation Date", datetime.date.today())
     crop_name = st.selectbox("Select Crop", list(crop_mapping.keys()))
     soil_name = st.selectbox("Soil Type", list(soil_mapping.keys()))
@@ -43,7 +43,7 @@ with st.sidebar:
     sq_val = st.slider("Soil Quality Index", 0.0, 100.0, 80.0)
 
 # --- THE PREDICTION BUTTON ---
-if st.button("🚀 Analyze & Generate Prediction"):
+if st.button("Analyze & Generate Prediction"):
     if model is None:
         st.error("Model not loaded correctly.")
     else:
