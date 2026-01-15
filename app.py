@@ -5,7 +5,7 @@ import joblib
 import os
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="AgriPredict", page_icon="🌱", layout="wide")
+st.set_page_config(page_title="AgriPredict",  layout="wide")
 
 # --- MODEL LOADING ---
 MODEL_PATH = "crop_yield_model.pkl"
