@@ -21,9 +21,9 @@ model = load_active_model()
 # --- SIDEBAR UI ---
 with st.sidebar:
     if model:
-        st.success("✅ System Online: Model Ready")
+        st.success(" Model Ready")
     
-    st.header("📍 Field Conditions")
+    st.header(" Field Conditions")
     crop_mapping = {"Wheat": 9, "Corn": 1, "Rice": 7, "Soybean": 8, "Cotton": 2}
     soil_mapping = {"Clay": 0, "Silt": 4, "Sandy": 3, "Loamy": 2}
     
@@ -43,7 +43,7 @@ with st.sidebar:
 # --- MAIN DASHBOARD ---
 st.title("🌾 Smart Farm: Yield Prediction Dashboard")
 
-if st.button("🚀 Analyze & Generate Prediction"):
+if st.button(" Analyze & Generate Prediction"):
     if model:
         # Prepare Feature Data
         features = ["Crop_Type", "Soil_Type", "Soil_pH", "Temperature", "Humidity", 
@@ -71,7 +71,7 @@ if st.button("🚀 Analyze & Generate Prediction"):
                     st.success("Status: SUCCESS: Predicted yield is within a healthy range.")
 
             with col_chart:
-                st.subheader("📊 Factor Impact Analysis")
+                st.subheader(" Factor Impact Analysis")
                 if hasattr(model, 'feature_importances_'):
                     importances = model.feature_importances_
                     feat_imp = pd.Series(importances, index=features).sort_values(ascending=True)
