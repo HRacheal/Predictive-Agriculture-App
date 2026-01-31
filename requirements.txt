@@ -1,5 +1,6 @@
-streamlit
-pandas
+fastapi
+uvicorn
 joblib
-matplotlib
+pandas
+pydantic
 scikit-learn
