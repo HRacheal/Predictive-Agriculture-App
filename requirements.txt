@@ -4,3 +4,6 @@ joblib
 pandas
 pydantic
 scikit-learn
+matplotlib
+streamlit
+numpy
